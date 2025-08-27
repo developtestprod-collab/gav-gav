@@ -1,47 +1,69 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Владик</title>
     <!-- Подключаем A-Frame и MindAR -->
     <script src="./frame.min.js"></script>
     <script src="./prod.js"></script>
-</head>
-<body>
 
-    <a-scene mindar-image="imageTargetSrc: ./targets.mind;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-        
-        <!-- ======================================================= -->
-        <!-- ПЕРЕМЕСТИЛИ БЛОК <a-assets> ВНУТРЬ СЦЕНЫ <a-scene>     -->
-        <!-- ======================================================= -->
-        <a-assets>
-            <video 
-                id="my-video" 
-                src="./my-video.mp4" 
-                autoplay 
-                loop="true" 
-                muted
-                playsinline 
-                webkit-playsinline>
-            </video>
-        </a-assets>
+    <!-- НАШ НОВЫЙ СКРИПТ ДЛЯ УПРАВЛЕНИЯ ВИДЕО -->
+    <script>
+      // Регистрируем новый компонент A-Frame под названием 'video-handler'
+      AFRAME.registerComponent("video-handler", {
+        init: function () {
+          // Получаем видеоэлемент
+          const video = document.querySelector("#my-video");
+          const videoPlane = this.el; // this.el - это сущность, на которой "висит" компонент (<a-entity>)
 
-        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+          // Сначала скроем плоскость с видео
+          videoPlane.setAttribute("visible", "false");
 
-        <!-- Сущность, привязанная к нашему маркеру -->
-        <a-entity mindar-image-target="targetIndex: 0">
-            
-            <!-- Плоскость, которая будет служить "экраном" для нашего видео. -->
-            <a-plane
-                src="#my-video"
-                position="0 0 0"
-                height="1"
-                width="1"
-            >
-            </a-plane>
+          // Слушаем событие 'targetFound' (маркер найден)
+          videoPlane.addEventListener("targetFound", (event) => {
+            console.log("Маркер найден!");
+            videoPlane.setAttribute("visible", "true"); // Показываем плоскость
+            video.play(); // Запускаем видео
+          });
 
-        </a-entity>
+          // Слушаем событие 'targetLost' (маркер потерян)
+          videoPlane.addEventListener("targetLost", (event) => {
+            console.log("Маркер потерян!");
+            videoPlane.setAttribute("visible", "false"); // Скрываем плоскость
+            video.pause(); // Ставим видео на паузу
+          });
+        },
+      });
+    </script>
+  </head>
+  <body>
+    <a-scene
+      mindar-image="imageTargetSrc: ./targets.mind;"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false"
+    >
+      <a-assets>
+        <video
+          id="my-video"
+          src="./my-video.mp4"
+          loop="true"
+          muted
+          playsinline
+          webkit-playsinline
+        >
+          <!-- Атрибут autoplay убран -->
+        </video>
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <!-- Сущность, привязанная к нашему маркеру -->
+      <!-- ДОБАВЛЯЕМ НАШ НОВЫЙ КОМПОНЕНТ 'video-handler' -->
+      <a-entity mindar-image-target="targetIndex: 0" video-handler>
+        <!-- Плоскость, которая будет служить "экраном" для нашего видео. -->
+        <a-plane src="#my-video" position="0 0 0" height="1" width="1">
+        </a-plane>
+      </a-entity>
     </a-scene>
-
-</body>
+  </body>
 </html>
